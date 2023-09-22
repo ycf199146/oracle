@@ -1,0 +1,9 @@
+variable stmt_task VARCHAR2(64);
+EXEC :stmt_task := DBMS_SQLTUNE.CREATE_TUNING_TASK(sql_id =>'90hyqsg6dps5w',time_limit=>7200);
+exec DBMS_SQLTUNE.EXECUTE_TUNING_TASK( task_name =>:stmt_task);
+SET LONG 10000000 LONGCHUNKSIZE 1000000 LINESIZE 180 pagesize 600 serveroutput on size 1000000
+SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK( :stmt_task) from dual;
+execute dbms_sqltune.accept_sql_profile(task_name => 'TASK_889',task_owner => 'SYS', replace => TRUE);
+
+select plan_table_output from table(dbms_xplan.display_awr('5b8ymvvbd6gd4'));
+select plan_table_output from table(dbms_xplan.display_cursor('8mruch6pzb5vz'));
