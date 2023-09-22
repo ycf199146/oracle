@@ -1,0 +1,27 @@
+查询日志切换频率
+
+查看日志每小时文件切换频率
+
+column h0 format 999
+column h1 format 999
+column h2 format 999
+column h3 format 999
+column h4 format 999
+column h5 format 999
+column h6 format 999
+column h7 format 999
+column h8 format 999
+column h9 format 999
+column avg format 999.99
+column day format a6
+SELECT TRUNC (first_time) "Date", TO_CHAR (first_time, 'Dy') "Day", COUNT (1) "Total",
+SUM (DECODE (TO_CHAR (first_time, 'hh24'), '00', 1, 0)) h0,
+SUM (DECODE (TO_CHAR (first_time, 'hh24'), '01', 1, 0)) "h1",
+SUM (DECODE (TO_CHAR (first_time, 'hh24'), '02', 1, 0)) "h2",
+SUM (DECODE (TO_CHAR (first_time, 'hh24'), '03', 1, 0)) "h3",
+to_char(ROUND (COUNT (1) / 24, 2),'fm99999999990.00') "Avg"
+FROM gv$log_history
+WHERE first_time >= trunc(SYSDATE) - 30
+and thread# = inst_id
+GROUP BY TRUNC (first_time), TO_CHAR (first_time, 'Dy')
+ORDER BY 1 DESC;

@@ -1,0 +1,9 @@
+
+exec DBMS_SQLTUNE.CREATE_STGTAB_SQLPROF(table_name=>'STAGE',schema_name=>'OPER');
+sqlplus oper/oper123
+EXEC DBMS_SQLTUNE.PACK_STGTAB_SQLPROF (staging_table_name =>'STAGE');  --所有的profile
+desc STAGE
+exp oper/oper123 tables=STAGE
+grant dba to oper;
+imp oper/oper123 tables=STAGE
+EXEC DBMS_SQLTUNE.UNPACK_STGTAB_SQLPROF(replace => TRUE,staging_table_name => 'STAGE');

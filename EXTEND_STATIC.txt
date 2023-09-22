@@ -1,0 +1,92 @@
+EDR_SHIPMENT_INSTR_IDX1
+EDR_OPS_VOYAGE_IDX1
+
+COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE, VOYAGE_CREATION_DATETIME
+
+declare
+cg_name varchar2(30);
+begin
+cg_name := sys.dbms_stats.create_extended_stats('EDRDATA','EDR_SHIPMENT_INSTRUCTION', '(COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE, VOYAGE_CREATION_DATETIME)');
+end;
+
+declare
+cg_name varchar2(30);
+begin
+cg_name := sys.dbms_stats.DROP_EXTENDED_STATS('EDRDATA','EDR_SHIPMENT_INSTRUCTION', '(COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE, VOYAGE_CREATION_DATETIME)');
+end;
+
+
+
+This command adds a column group in the SURNAME and COUNTRY columns to 
+indicate that there is a relationship between them.Gathering statistics:
+Exec dbms_stats.gather_table_stats('EDRDATA','EDR_SHIPMENT_INSTRUCTION',method_opt => 'for columns (COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE, VOYAGE_CREATION_DATETIME) size skewonly ',degree=>8);
+
+
+exec DBMS_STATS.GATHER_TABLE_STATS(ownname=>'EDRDATA',tabname=>'EDR_OPS_VOYAGE',ESTIMATE_PERCENT=>100,method_opt=>'for all columns size AUTO',cascade=>true,force=>true,degree=>8);  
+
+
+EDR_OPS_VOYAGE
+declare
+cg_name varchar2(30);
+begin
+cg_name := sys.dbms_stats.create_extended_stats('EDRDATA','EDR_OPS_VOYAGE', '(COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE, DEPARTURE_DATETIME)');
+end;
+/
+
+Exec dbms_stats.gather_table_stats('EDRDATA','EDR_OPS_VOYAGE',method_opt => 'for columns (COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE, DEPARTURE_DATETIME) size skewonly ',degree=>8);
+
+
+EDR_CONT_QC_MOVEMENT
+declare
+cg_name varchar2(30);
+begin
+cg_name := sys.dbms_stats.create_extended_stats('EDRDATA','EDR_CONT_QC_MOVEMENT', '(COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE)');
+end;
+/
+
+Exec dbms_stats.gather_table_stats('EDRDATA','EDR_CONT_QC_MOVEMENT',method_opt => 'for columns (COMPANY_CODE, VESSEL_CODE, VOYAGE_CODE) size skewonly ',degree=>8);
+
+Displaying information:
+SELECT extension_name, extension
+FROM DBA_stat_extensions
+WHERE table_name='EDR_CONT_QC_MOVEMENT';
+
+EXTENSION_NAME EXTENSION
+------------------------------ -------------------------------------------
+SYS_STUNGI_PA1_0VMXYHT_QQ_PM#K ("SURNAME","COUNTRY")
+
+
+SELECT e.extension col_group, t.num_distinct, t.histogram
+FROM DBA_stat_extensions e, DBA_tab_col_statistics t
+WHERE e.extension_name=t.column_name
+AND e.table_name = t.table_name
+AND t.table_name='EDR_SHIPMENT_INSTRUCTION';
+
+COL_GROUP NUM_DISTINCT HISTOGRAM
+--------------------- ------------ ---------------
+("SURNAME","COUNTRY") 201 FREQUENCY
+
+exec DBMS_STATS.GATHER_TABLE_STATS(ownname=>'EDRDATA',tabname=>'EDR_OPS_VOYAGE',ESTIMATE_PERCENT=>100,method_opt=>'for all columns size AUTO',cascade=>true,force=>true,degree=>8);  
+
+
+select *  from dba_stat_extensions where owner='EDRDATA';
+
+12c之后的版本可以开启自动扩展统计信息收集，但是会导致多次的硬解析，因此对于olap系统比较适用，对于oltp系统建议测试后在上线
+Auto Column Group Detection
+The examples above rely on DBMS_STATS.SEED_COL_USAGE or manual data analysis. 
+Oracle Database 12c onwards will automatically detect the need for column groups using SQL plan directives, 
+but note that detection will sometimes require relevant SQL statements to be hard parsed more than once. 
+This mechanism has the advantage of suggesting column groups only where significant cardinality misestimates are detected.
+
+模拟自动扩展统计信息收集
+select dbms_stats.report_col_usage(user,'test_table') from dual;
+select dbms_stats.create_extended_stats(user,'test_table') from dual;
+
+  
+打开自动扩展统计信息收集
+检查是否开启了自动扩展统计信息收集
+select dbms_stats.get_prefs('AUTO_STAT_EXTENSIONS') from dual;
+
+打开数据库全局自动扩展统计信息收集
+exec dbms_stats.set_global_prefs ('AUTO_STAT_EXTENSIONS', 'OFF');  >>>>====表示不自动创建
+exec dbms_stats.set_global_prefs ('AUTO_STAT_EXTENSIONS', 'ON');  >>>>====表示会根据SQL计划指示自动创建

@@ -1,0 +1,17 @@
+set lines 1200 pages 1200
+col sql_id for a15
+col event for a30
+col p1 for a23
+col block_sess for a9
+col session_state for a15
+spool /home/oracle/tmlock07281649.txt
+select h.sample_time,h.INST_ID,h.session_id,h.sql_id,h.event,session_state,
+h.p1text||'='||to_char(h.p1,'XXXXXXXX') p1,
+h.p2,
+blocking_inst_id||'-'||blocking_session block_sess,time_waited/1000000 wait
+from gv$active_session_history h
+where h.sample_time>=to_date('2022-04-20-14:31:00','yyyy-mm-dd-hh24:mi:ss')
+and h.sample_time<=to_date('2022-04-20-15:18:00','yyyy-mm-dd-hh24:mi:ss')
+--and h.event like 'enq%'
+order by h.sample_time,9,10
+/

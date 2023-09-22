@@ -1,0 +1,29 @@
+--估算剩余时间
+select sid, SERIAL# ,SOFAR,TIME_REMAINING,MESSAGE from V$SESSION_LONGOPS where sid=1186;
+select sid, SERIAL# ,SOFAR,TIME_REMAINING,MESSAGE from V$SESSION_LONGOPS where TIME_REMAINING>0;
+
+--看长事务语句剩余时间
+set line 150 pagesize 999
+col event for a30
+set linesize 200 pagesize 20000
+select sl.sid,sl.SERIAL#,s.username,s.PROGRAM,s.sql_id,s.event,
+to_char(sl.START_TIME,'yyyy-mm-dd hh24:mi:ss'),sl.TIME_REMAINING
+from v$session_longops sl,v$session s
+where sl.sid=s.sid and sl.serial#=s.serial# and sl.TIME_REMAINING>0 order by 8;
+
+
+select p.spid,s.sql_id,s.sid,start_time
+from v$session s, v$transaction t, v$process p
+where s.taddr = t.addr
+and sysdate - to_date(start_time,'MM/DD/YY HH24:MI:SS') >=  30/1440
+and  s.sid not in (select /* +rule */sid
+                   from v$lock
+                   where type = 'TM'
+                   and id1 in (select object_id
+                               from dba_objects
+                               where object_name ='SYSTEM_JOB_CONTROL'
+                                 and object_type = 'TABLE'
+                                 and owner = 'NGENDATA')
+                  )
+and s.paddr = p.addr;
+

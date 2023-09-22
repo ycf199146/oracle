@@ -1,0 +1,26 @@
+
+
+ 1)	高水位表收集
+SELECT NUM_ROWS,AVG_ROW_LEN*NUM_ROWS/1024/1024/0.9 NEED, BLOCKS*8/1024 TRUE,(BLOCKS*8/1024-AVG_ROW_LEN*NUM_ROWS/1024/1024/0.9) RECOVER_MB,TABLE_NAME
+FROM dba_tables
+WHERE tablespace_name='BIZLK_DATA' AND BLOCKS*8/1024-AVG_ROW_LEN*NUM_ROWS/1024/1024/0.9>10
+AND rownum<11 order by RECOVER_MB desc;
+
+统计信息的脚本：exec dbms_stats.gather_table_stats('user','table_name');
+2)	启用表的行转移功能
+alter table BIZDATA.EC_DOCUMENT_DATA  shrink space compact;  ---表上加共享锁，行上加排他锁
+alter table BIZDATA.EC_DOCUMENT_DATA  shrink space;  --表上加排他锁，行上加排他锁
+
+3)	压缩高水位线
+SQL> alter table 'AUDIT_ENTRY'  shrink space ;
+4)	查看统计信息
+select t.table_name,BLOCKS,EMPTY_BLOCKS,NUM_ROWS
+from dba_tables t
+where table_name = upper('CNTR_GROSS_WT_AUDIT_LOG');
+5)	收集统计信息
+SQL> exec dbms_stats.gather_table_stats('NGENDATA','CNTR_GROSS_WT_AUDIT_LOG');
+6)	再次查看
+SQL> select t.table_name,BLOCKS,EMPTY_BLOCKS,NUM_ROWS
+  from dba_tables t
+ where table_name = upper('表名');
+ alter table  '表名'   DISABLE row movement ;

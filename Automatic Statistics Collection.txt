@@ -1,0 +1,3 @@
+FAQ: Automatic Statistics Collection (Doc ID 1233203.1)
+ SELECT DBMS_STATS.get_param('method_opt') FROM dual;
+ 

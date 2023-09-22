@@ -1,0 +1,7 @@
+执行计划绑定
+
+variable stmt_task VARCHAR2(64);
+EXEC :stmt_task := DBMS_SQLTUNE.CREATE_TUNING_TASK(sql_id =>'28np650autt9d',time_limit=>7200);
+exec DBMS_SQLTUNE.EXECUTE_TUNING_TASK( task_name =>:stmt_task);
+SET LONG 10000000 LONGCHUNKSIZE 1000000 LINESIZE 180 pagesize 600 serveroutput on size 1000000
+SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK( :stmt_task) from dual;

@@ -1,0 +1,15 @@
+-----auto task情况
+
+----window配置情况
+select * from DBA_AUTOTASK_WINDOW_CLIENTS;
+
+---最近执行情况
+set lin 380 pages 49999
+col CLIENT_NAME for a35
+col WINDOW_NAME for a35
+col job_name for a35
+col WINDOW_START_TIME for a35
+col JOB_START_TIME for a35
+col WINDOW_DURATION for a35
+col JOB_DURATION for a35
+select * from DBA_AUTOTASK_JOB_HISTORY where window_name='SATURDAY_WINDOW';

@@ -1,0 +1,184 @@
+
+=============================================================================================
+session1:
+alter session set current_schema=ecpusr;
+sys@ngenuat(UAT)-> select count(*) from cntr_outbound_full_empty_vw where rownum<10;
+ 
+
+  COUNT(*)
+----------
+         9
+
+Elapsed: 00:09:52.26
+
+
+==============================================================================================
+session 2:
+
+---------------------------------------------------------------------------------------active_session
+set linesize 300
+col schemaname for a20
+col osuser for a20
+col event for a50
+select sid,sql_id,schemaname,osuser,program,event from v$session where username is not null and 
+status='ACTIVE' order by logon_time,sid;
+
+set linesize 300
+col schemaname for a20
+col osuser for a20
+col event for a50
+select sid,sql_id,schemaname,osuser,program,machine,event from v$session where username is not null and 
+status='ACTIVE' order by logon_time,sid;
+
+
+set linesize 300
+col schemaname for a20
+col osuser for a20
+col event for a50
+select logon_time,sid,sql_id,schemaname,osuser,program,machine,event from v$session where username is not null and 
+status='ACTIVE' and machine='YICT\VBOE06' order by logon_time,sid;
+
+select dbms_auto_report.Report_repository_detail(rid=>89984,type=>'TEXT') from dual;
+
+
+============================================================================================OS pid
+select p.spid,s.sid from v$session s,v$process p where s.paddr=p.addr and s.sid=780;
+SPID                            SID
+------------------------ ----------
+9365                            780
+
+select p.spid,s.sid from v$session s,v$process p where s.paddr=p.addr and p.spid=29567;
+
+-----------------------------------------------------------------------------------------------sql_id
+rem 注意这里v$sql生成的first和last时间都是同一sql第一次执行的时间
+set linesize 300
+set pagesize 10000
+col sql_text for a100
+col FIRST_LOAD_TIME for a20
+col LAST_LOAD_TIME for a20
+select sql_id,HASH_VALUE,PLAN_HASH_VALUE,CHILD_NUMBER,FIRST_LOAD_TIME,
+ELAPSED_TIME,
+LAST_LOAD_TIME,
+sql_text 
+from v$sql 
+where sql_text like '%select count(*) from cntr_outbound_full_empty_vw where rownum<10%' 
+order by FIRST_LOAD_TIME;
+
+
+-------------------------------------------------------------------------------------------sql_monotor
+SET LONG 1000000
+SET LONGCHUNKSIZE 1000000
+SET LINESIZE 1000
+SET PAGESIZE 0
+SET TRIM ON
+SET TRIMSPOOL ON
+SET ECHO OFF
+SET FEEDBACK OFF
+select DBMS_SQLTUNE.REPORT_SQL_MONITOR(sql_id =>'1xcngwj6ypnkx',type =>'TEXT',REPORT_LEVEL =>'ALL') AS REPORT FROM DUAL;
+--SELECT DBMS_SQLTUNE.report_sql_monitor_list(type =>'TEXT',report_level => 'ALL') AS report FROM dual;
+
+select plan_table_output from table(dbms_xplan.display_awr('gb21pw32w5n5m'));
+select plan_table_output from table(dbms_xplan.display_cursor('gb21pw32w5n5m'));
+
+select DBMS_SQLTUNE.REPORT_SQL_MONITOR(sql_id =>'4guvhpcgs45b6',type =>'TEXT',REPORT_LEVEL =>'ALL') AS REPORT FROM DUAL;
+
+sys@ngenuat(UAT)-> l
+  1  SELECT DBMS_SQLTUNE.report_sql_monitor(sql_id => '7s6dzufrdmgcn', type => 'TEXT')
+  2* AS report FROM dual
+sys@ngenuat(UAT)-> /
+SQL Monitoring Report
+
+SQL Text
+------------------------------
+select count(*) from cntr_outbound_full_empty_vw where rownum<10
+
+Global Information
+------------------------------
+ Status              :  DONE (ALL ROWS)
+ Instance ID         :  1
+ Session             :  SYS (1025:55771)
+ SQL ID              :  7s6dzufrdmgcn
+ SQL Execution ID    :  16777217
+ Execution Started   :  11/23/2021 13:41:37
+ First Refresh Time  :  11/23/2021 13:41:41
+ Last Refresh Time   :  11/23/2021 13:51:29
+ Duration            :  592s
+ Module/Action       :  sqlplus@yictngu7 (TNS V1-V3)/-
+ Service             :  SYS$USERS
+ Program             :  sqlplus@yictngu7 (TNS V1-V3)
+ Fetch Calls         :  1
+
+Global Stats
+==============================================================================
+| Elapsed |   Cpu   |    IO    | Concurrency | Fetch | Buffer | Read | Read  |
+| Time(s) | Time(s) | Waits(s) |  Waits(s)   | Calls |  Gets  | Reqs | Bytes |
+==============================================================================
+|     611 |      40 |      570 |        0.00 |     1 |   490K | 406K |   2GB |
+==============================================================================
+
+###注释
+这里Cpu 表示该sql在cpu上的用时 秒。
+IO Waits：表示用在i/o请求的秒数
+Concurrency：并发耗时
+Buffer Gets：从内存中请求的次数；
+Read Reqs： 从磁盘进行物理读请求的次数
+
+SQL Plan Monitoring Details (Plan Hash Value=2888220659)
+=========================================================================================================================================================================================================
+| Id |              Operation               |             Name              |  Rows   | Cost  |   Time    | Start  | Execs |   Rows   | Read | Read  |  Mem  | Activity |        Activity Detail        |
+|    |                                      |                               | (Estim) |       | Active(s) | Active |       | (Actual) | Reqs | Bytes | (Max) |   (%)    |          (# samples)          |
+=========================================================================================================================================================================================================
+|  0 | SELECT STATEMENT                     |                               |         |       |         1 |   +592 |     1 |        1 |      |       |       |          |                               |
+|  1 |   SORT AGGREGATE                     |                               |       1 |       |         1 |   +592 |     1 |        1 |      |       |       |          |                               |
+|  2 |    COUNT STOPKEY                     |                               |         |       |         1 |   +592 |     1 |        9 |      |       |       |          |                               |
+|  3 |     MERGE JOIN OUTER                 |                               |   11718 | 34499 |       221 |   +372 |     1 |        9 |      |       |       |          |                               |
+|  4 |      MERGE JOIN OUTER                |                               |   11718 | 19932 |       589 |     +4 |     1 |        9 |      |       |       |          |                               |
+|  5 |       SORT JOIN                      |                               |   11718 |  5364 |       589 |     +4 |     1 |        9 |      |       |    2M |          |                               |
+|  6 |        MERGE JOIN SEMI               |                               |   11718 |  5362 |         4 |     +1 |     1 |    71879 |      |       |       |     0.17 | Cpu (1)                       |
+|  7 |         SORT JOIN                    |                               |   47046 |  5349 |         1 |     +4 |     1 |    78412 |      |       |    3M |          |                               |
+|  8 |          TABLE ACCESS FULL           | CONTAINER                     |   47046 |  4834 |         1 |     +4 |     1 |    78412 |      |       |       |          |                               |
+|  9 |         SORT UNIQUE                  |                               |     471 |    13 |         1 |     +4 | 78412 |    71879 |      |       |  243K |          |                               |
+| 10 |          TABLE ACCESS FULL           | LOCN_GP_ACCESS_CTRL_GP_MEMBER |     471 |    12 |         1 |     +4 |     1 |     4097 |      |       |       |          |                               |
+| 11 |       SORT JOIN                      |                               |       8 | 14568 |       221 |   +372 |     9 |        9 |      |       |    2M |          |                               |
+| 12 |        VIEW                          |                               |       8 | 14567 |         1 |   +372 |     1 |    74434 |      |       |       |          |                               |
+| 13 |         SORT GROUP BY                |                               |       8 | 14567 |       369 |     +4 |     1 |    74434 |      |       |    6M |     0.17 | Cpu (1)                       |
+| 14 |          TABLE ACCESS BY INDEX ROWID | CNTR_AUDIT_LOG                |      44 | 14566 |       371 |     +2 |     1 |    74586 | 208K | 811MB |       |    58.02 | Cpu (7)                       |
+|    |                                      |                               |         |       |           |        |       |          |      |       |       |          | resmgr:cpu quantum (2)        |
+|    |                                      |                               |         |       |           |        |       |          |      |       |       |          | db file sequential read (331) |
+| 15 |           INDEX RANGE SCAN           | CNTR_AUDIT_LOG_IDX_3          |   38388 |   192 |       369 |     +4 |     1 |     227K | 8783 |  34MB |       |     4.10 | db file sequential read (24)  |
+| 16 |      SORT JOIN                       |                               |       8 | 14568 |         1 |   +592 |     9 |        0 |      |       | 49152 |          |                               |
+| 17 |       VIEW                           |                               |       8 | 14567 |         1 |   +592 |     1 |     1065 |      |       |       |          |                               |
+| 18 |        SORT GROUP BY                 |                               |       8 | 14567 |       221 |   +372 |     1 |     1065 |      |       |  113K |          |                               |
+| 19 |         TABLE ACCESS BY INDEX ROWID  | CNTR_AUDIT_LOG                |      44 | 14566 |       222 |   +371 |     1 |     1065 | 182K | 710MB |       |    34.81 | Cpu (11)                      |
+|    |                                      |                               |         |       |           |        |       |          |      |       |       |          | db file parallel read (187)   |
+|    |                                      |                               |         |       |           |        |       |          |      |       |       |          | db file sequential read (6)   |
+| 20 |          INDEX RANGE SCAN            | CNTR_AUDIT_LOG_IDX_3          |   38388 |   192 |       221 |   +372 |     1 |     212K | 6592 |  26MB |       |     2.73 | db file sequential read (16)  |
+=========================================================================================================================================================================================================
+
+
+查看该sql最耗时的步骤：
+sys@ngenuat(UAT)-> select count(*),SQL_PLAN_LINE_ID
+from gv$active_session_history 
+where sql_id='&sqlid'
+group by SQL_PLAN_LINE_ID 
+order by 2;
+
+Enter value for sqlid: 7s6dzufrdmgcn
+old   3: where sql_id='&sqlid'
+new   3: where sql_id='7s6dzufrdmgcn'
+         1                6
+         1               13
+       340               14
+        24               15
+       368               19
+        34               20
+    
+    
+    
+查看指定sql的被sql_monitor采集的过程（默认隔5s采集）
+select last_refresh_time,sql_id,sql_text from v$sql_monitor where sql_id='7s6dzufrdmgcn';
+
+
+
+
+    

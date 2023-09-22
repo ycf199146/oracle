@@ -1,0 +1,29 @@
+10053
+alter session set tracefile_identifier='shadow';
+alter session set container=edruat;
+alter session set current_schema=edrdata;
+set autotrace traceonly;
+ALTER SESSION SET EVENTS='10053 trace name context forever, level 1';
+create index NGENDATA.IDX$$_1BE140002 on NGENDATA.GATE_AUTOMATION_PREADVICE_HIST("AUTO_GATE_REFERENCE_NO");
+drop index 	NGENDATA.IDX$$_1BE140002;
+select to_char(MEA.CREATED_DATETIME, 'yyyyMMddhh24miss') as CREATED_DATETIME_pcc , to_char(hist.CREATED_DATETIME, 'yyyyMMddhh24miss') as CREATED_DATETIME_hist , to_char(hist.UPDATED_DATETIME, 'yyyyMMddhh24miss') as UPDATED_DATETIME_hist, MEA.AUTO_GATE_REFERENCE_NO, MEA.TRACTOR_NO, MEA.TARGET_GHS_LANE_NO, decode(upper(HIST.GATE_AUTO_PREADV_HIST_MODE), 'COMPLETE', 1, 0) AS GATE_AUTO_PREADV_HIST_MODE, HIST.MOVEMENT_CNTR_INTERCHANGE_MODE, HIST.CNTR_ID, HIST.TML_BOOKING_NO, HIST.CNTR_STATUS from ngendata.CNTR_PREPARATORY_MEASUREMENT MEA, ngendata.GATE_AUTOMATION_PREADVICE_HIST HIST where MEA.AUTO_GATE_REFERENCE_NO = HIST.AUTO_GATE_REFERENCE_NO and MEA.CNTR_PREPARATORY_MSM_SOURCE_PT = 'KIOSK' and to_char(hist.CREATED_DATETIME, 'yyyyMMddhh24miss')>='20211214170215' and hist.AUTO_GATE_REFERENCE_NO='57943135' order by hist.AUTO_GATE_REFERENCE_NO asc;
+
+
+
+ALTER SESSION SET EVENTS '10053 trace name context off';
+
+
+oradebug setospid
+oradebug unlimit;
+oradebug event 10046 trace name context forever, level 12;
+... 执行查询SQL;
+oradebug event 10046 trace name context off;
+oradebug tracefile_name
+
+SQL> alter session set events = '10046 trace name context forever,level 12';
+
+会话已更改。
+
+SQL> alter session set events = '10046 trace name context off';
+
+tkprof statdb_ora_1225.trc shadow.log

@@ -1,0 +1,179 @@
+
+
+bg4x0xbv47bqb
+
+fp2ymq0a6yncp
+
+SELECT sl.block_id, sl.stack_no , sl.lane_no from ngendata.yard_stack ys,  ngendata.stack_lane sl WHERE ys.current_cntr_length_control <> 'NU' AND sl.block_id = ys.block_id AND sl.stack_no = ys.stack_no AND sl.lashing_indr = 'Y' AND exists    (SELECT 'x' from ngendata.container c    WHERE c.ls_terminal_id = sl.terminal_id    AND c.ls_level_1 = sl.block_id    AND c.ls_level_2 = sl.stack_no    AND c.ls_level_3 = sl.lane_no ) ORDER BY block_id,  stack_no, lane_no; 
+
+
+SELECT sl.block_id, sl.stack_no , sl.lane_no from yard_stack ys,  stack_lane sl WHERE ys.current_cntr_length_control <> 'NU' AND sl.block_id = ys.block_id AND sl.stack_no = ys.stack_no AND sl.lashing_indr = 'Y' AND exists    (SELECT 'x' from container c    WHERE c.ls_terminal_id = sl.terminal_id    AND c.ls_level_1 = sl.block_id    AND c.ls_level_2 = sl.stack_no    AND c.ls_level_3 = sl.lane_no ) ORDER BY block_id,  stack_no, lane_no; 
+
+
+
+exec DBMS_SQLTUNE.CREATE_SQLSET('fp2ymq0a6yncp','fp2ymq0a6yncp','OPER'); 
+
+DECLARE 
+stscur dbms_sqltune.sqlset_cursor; 
+BEGIN 
+OPEN stscur FOR 
+SELECT VALUE(P) 
+FROM TABLE(dbms_sqltune.select_cursor_cache('sql_id =''fp2ymq0a6yncp''',null, null, null, null, null, null, 'ALL')) P; 
+dbms_sqltune.load_sqlset(sqlset_name => 'fp2ymq0a6yncp', 
+populate_cursor => stscur, 
+sqlset_owner => 'OPER'); 
+END; 
+/
+
+
+select * from dba_sqlset_plans where sqlset_name='fp2ymq0a6yncp';
+
+select sql_id, substr(sql_text,1, 15) text 
+from dba_sqlset_statements 
+where sqlset_name = 'fp2ymq0a6yncp' 
+order by sql_id;
+
+SELECT * FROM table ( DBMS_XPLAN.DISPLAY_awr( 'fp2ymq0a6yncp'));
+SELECT * FROM table ( DBMS_XPLAN.DISPLAY_SQLSET( 'fp2ymq0a6yncp','fp2ymq0a6yncp'));
+SELECT * FROM table ( DBMS_XPLAN.DISPLAY_cursor( 'fp2ymq0a6yncp'));
+SELECT * FROM table(DBMS_SQLTUNE.SELECT_CURSOR_CACHE('sql_id =''fp2ymq0a6yncp'''));
+
+set serveroutput on 
+declare 
+my_integer pls_integer; 
+begin 
+my_integer := dbms_spm.load_plans_from_sqlset ( 
+sqlset_name => 'fp2ymq0a6yncp', 
+sqlset_owner => 'OPER', 
+fixed => 'YES', 
+enabled => 'YES'); 
+DBMS_OUTPUT.PUT_line(my_integer); 
+end; 
+/
+
+
+
+
+>>Export STS
+exec dbms_sqltune.create_stgtab_sqlset(table_name => 'FP2', schema_name => 'OPER');
+exec dbms_sqltune.pack_stgtab_sqlset(sqlset_name => 'fp2ymq0a6yncp', staging_table_name => 'FP2', staging_schema_owner => 'OPER',sqlset_owner =>'OPER');
+export NLS_LANG=.UTF8
+exp oper/oracle_123t@ngstress tables=oper.TEST_STS file=TEST_STS_0111.dmp log=TEST_STS_0111_fxtqbng67jmfv.exp.log compress=n direct=y buffer=20000000
+exp oper/oper123 tables=oper.FP2 file=fp2ymq0a6yncp.dmp log=fp2ymq0a6yncp.exp.log compress=n direct=y buffer=20000000
+
+
+
+create user oper identified by oracle_123t;
+grant dba to oper;
+imp oper/oracle_123t@ngstress tables=TEST_STS FROMUSER=oper file=TEST_STS_0111.dmp log=TEST_STS_fxtqbng67jmfv.imp.log  
+imp oper/oper123 tables=FP2 FROMUSER=oper file=fp2ymq0a6yncp.dmp log=fp2ymq0a6yncp.imp.log  
+
+imp oper/oracle_123t@ngstress tables=TEST_STS FROMUSER=oper file=TEST_STS.dmp log=TEST_STS_fxtqbng67jmfv.imp.log  
+
+exec dbms_sqltune.unpack_stgtab_sqlset(sqlset_name => 'fp2ymq0a6yncp', replace => true, staging_table_name => 'FP2',staging_schema_owner =>'OPER',sqlset_owner =>'OPER');
+
+set serveroutput on 
+declare 
+my_integer pls_integer; 
+begin 
+my_integer := dbms_spm.load_plans_from_sqlset ( 
+sqlset_name => 'fp2ymq0a6yncp', 
+sqlset_owner => 'OPER', 
+fixed => 'YES', 
+enabled => 'YES'); 
+DBMS_OUTPUT.PUT_line(my_integer); 
+end; 
+/
+
+
+execute dbms_sqltune.drop_sql_profile('SYS_SQLPROF_017e9f51336b0000');
+
+
+
+set serveroutput on 
+declare 
+my_integer pls_integer; 
+begin 
+my_integer := dbms_spm.load_plans_from_sqlset ( 
+sqlset_name => 'TEST_STS', 
+sqlset_owner => 'OPER', 
+fixed => 'YES', 
+enabled => 'YES'); 
+DBMS_OUTPUT.PUT_line(my_integer); 
+end; 
+/
+
+select * from table(dbms_xplan.display_cursor('9n03w2y9dtjgu'));
+
+select * from table(dbms_xplan.display_awr('24yamfst73y2n'));
+	9n03w2y9dtjgu
+
+'sql_id =''24yamfst73y2n'''
+
+5xaxjhckt9n54
+24yamfst73y2n
+
+set serveroutput on 
+declare 
+my_integer pls_integer; 
+begin 
+my_integer := dbms_spm.load_plans_from_awr ( 
+begin_snap => '3760',
+end_snap => '3775',  
+basic_filter =>'sql_id =''24yamfst73y2n''', 
+fixed => 'NO', 
+enabled => 'YES'); 
+DBMS_OUTPUT.PUT_line(my_integer); 
+end; 
+/
+
+
+set serveroutput on 
+declare 
+my_integer pls_integer; 
+begin 
+my_integer := dbms_spm.ALTER_SQL_PLAN_BASELINE ( 
+sql_handle => 'SQL_e31596401c25a39a',
+plan_name => 'SQL_PLAN_f65cq80f2b8wub2d4ff6e',  
+attribute_name  => 'fixed',
+attribute_value => 'YES'); 
+DBMS_OUTPUT.PUT_line(my_integer); 
+end; 
+/
+
+set serveroutput on 
+declare 
+my_integer pls_integer; 
+begin 
+my_integer := dbms_spm.DROP_SQL_PLAN_BASELINE ( 
+sql_handle => 'SQL_e31596401c25a39a',
+plan_name => 'SQL_PLAN_f65cq80f2b8wu40e54cd3'); 
+DBMS_OUTPUT.PUT_line(my_integer); 
+end; 
+/
+
+
+
+
+
+
+set serveroutput on 
+declare 
+my_integer pls_integer; 
+begin 
+my_integer := dbms_spm.LOAD_PLANS_FROM_CURSOR_CACHE ( 
+sql_id => '7x74kmjsn7396',
+plan_hash_value => '1163102432',  
+fixed => 'YES', 
+enabled => 'YES'); 
+DBMS_OUTPUT.PUT_line(my_integer); 
+end; 
+/
+
+
+DBMS_SPM.LOAD_PLANS_FROM_CURSOR_CACHE (
+sql_id IN VARCHAR2,
+plan_hash_value IN NUMBER := NULL,
+fixed IN VARCHAR2 := 'NO',
+enabled IN VARCHAR2 := 'YES')
+RETURN PLS_INTEGER;

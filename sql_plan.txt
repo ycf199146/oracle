@@ -1,0 +1,5 @@
+select * from v$sql where sql_id='cb5vgtz0hwc57'
+
+select * from dba_hist_reports where key1='cb5vgtz0hwc57'
+
+select dbms_auto_report.Report_repository_detail(rid=>30904,type=>'TEXT') from dual

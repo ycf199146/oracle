@@ -1,0 +1,446 @@
+一、创建存储统计信息表
+exec dbms_stats.create_stat_table('OPER','STATS_TABLE','CORE_OPERATION_D01');
+---SUPPORT：表空间名
+exec dbms_stats.create_stat_table (ownname => 'SCOTT', stattab => 'ST_T1', tblspace => 'TBS1');
+
+
+
+二、导出统计信息
+exec dbms_stats.export_schema_stats(ownname=>'EDRDATA',stattab=>'STATS_TABLE',statid=>'EDRDATA_20181025');
+
+SQL> select count(*) from edrdata.STATS_TABLE;
+
+导出表的统计信息
+scott@USBO> exec dbms_stats.export_table_stats(ownname =>'SCOTT',tabname=>'T1',stattab=>'ST_T1',statid => 'A');
+
+
+三、导入统计信息
+exec dbms_stats.import_schema_stats(ownname=>'EDRDATA',stattab=>'STATS_TABLE',statid=>'EDRDATA_20181025');
+
+
+四、删除统计信息
+exec dbms_stats.drop_stat_table('EDRDATA','STATS_TABLE');
+
+
+删除统计信息，锁定统计信息:
+exec dbms_stats.delete_table_stats(ownname => 'SA',tabname => upper('temp_T_ORG_Admin'),cascade_indexes => true) ;
+
+
+exec dbms_stats.lock_table_stats(ownname => 'SA',tabname => upper('temp_T_ORG_Admin'),stattype => 'ALL');
+---------------------
+作者：forrest_lv
+来源：CSDN
+原文：https://blog.csdn.net/lvzq2006/article/details/84695427
+版权声明：本文为博主原创文章，转载请附上博文链接！
+
+
+--源端统计信息导出：
+begin
+ DBMS_STATS.CREATE_STAT_TABLE('SYSTEM','JINGYU_STATS_20181217'); 
+ DBMS_STATS.EXPORT_SCHEMA_STATS(OWNNAME => 'JINGYU', STATTAB => 'JINGYU_STATS_20181217', STATOWN => 'SYSTEM');
+end;
+/
+expdp \'/ as sysdba\' directory=xtts dumpfile=stats_jingyu.dmp logfile=stats_jingyu.log tables=system.jingyu_stats_20181217
+ 
+--目标端统计信息导入：
+impdp \'/ as sysdba\' directory=xtts dumpfile=stats_jingyu.dmp logfile=stats_jingyu.log cluster=n
+exec DBMS_STATS.IMPORT_SCHEMA_STATS (OWNNAME => 'JINGYU', STATTAB => 'JINGYU_STATS_20181217', STATOWN => 'SYSTEM');
+ 
+--删除存放统计信息的表（根据实际需要选择性执行）：
+exec DBMS_STATS.DROP_STAT_TABLE ('SYSTEM','JINGYU_STATS_20181217');
+
+
+
+
+begin
+ DBMS_STATS.CREATE_STAT_TABLE('OPER','STAT_2023_0531'); 
+ DBMS_STATS.EXPORT_SCHEMA_STATS(OWNNAME => 'NGENDATA', STATTAB => 'STAT_2023_0531', STATOWN => 'OPER');
+end;
+/
+create or replace directory dp1 as '/ngprdb/dump';
+create or replace directory dp as '/publicspace/shadow';
+expdp \'/ as sysdba\' directory=DP1 dumpfile=STAT_2023_0531.dmp logfile=STAT_2023_0531.log tables=OPER.STAT_2023_0531
+
+
+begin
+ DBMS_STATS.CREATE_STAT_TABLE('OPER','STAT_2022_0826'); 
+ DBMS_STATS.EXPORT_SCHEMA_STATS(OWNNAME => 'TOPSDATA', STATTAB => 'STAT_2022_0826', STATOWN => 'OPER');
+end;
+/
+create or replace directory dp as '/topsdb/dump';
+expdp \'/ as sysdba\' directory=DP dumpfile=STAT_2022_0826.dmp logfile=stats_STAT_2022_0826.log tables=OPER.STAT_2022_0826
+
+
+
+
+
+
+
+
+--------------------------------------
+索引统计信息:
+一、创建存储统计信息表
+exec dbms_stats.create_stat_table('EDRDATA','STATS_TABLE','SUPPORT');
+
+二、导出索引统计信息
+exec dbms_stats.export_index_stats(ownname=>'EDRDATA',indname=>'STATS_INDEX',stattab=>'STATS_TABLE',statid=>'EDRDATA_INDEX_20181025');
+
+
+三、导入统计信息
+exec dbms_stats.import_index_stats(ownname=>'EDRDATA',indname=>'STATS_INDEX',stattab=>'STATS_TABLE',statid=>'EDRDATA_INDEX_20181025');
+
+四、删除统计信息
+exec dbms_stats.delete_index_stats('EDRDATA','STATS_INDEX');
+
+
+exec dbms_stats.export_schema_stats(ownname=>'EDRDATA',stattab=>'STATS_TABLE',statid=>'EDRDATA_20190107');
+exec dbms_stats.import_schema_stats(ownname=>'EDRDATA',stattab=>'STATS_TABLE',statid=>'EDRDATA_20190107');
+
+yictedr2:/home/oracle [edrprod] >export NLS_LANG=AMERICAN_AMERICA.UTF8
+exp oper/oper123_tps  file=/tmp/edr_stats.dmp tables=STATS_TABLE       log=/tmp/edr_stats.log
+
+
+
+
+
+
+SQL> exec dbms_stats.flush_database_monitoring_info;
+
+PL/SQL procedure successfully completed.
+
+SQL> select owner,table_name name,object_type,stale_stats,last_analyzed from dba_tab_statistics where
+
+table_name in ('TEST') and owner='ADMIN' and (stale_stats='YES' or last_analyzed is null);
+
+no rows selected
+
+
+收集数据库信息
+EXEC DBMS_STATS.gather_database_stats;
+EXEC DBMS_STATS.gather_database_stats(estimate_percent => 15);
+
+–收集schema信息
+EXEC DBMS_STATS.gather_schema_stats(‘SCOTT’);
+EXEC DBMS_STATS.gather_schema_stats(‘SCOTT’, estimate_percent => 15);
+
+–收集表信息
+EXEC DBMS_STATS.gather_table_stats(‘SCOTT’, ‘EMPLOYEES’);
+EXEC DBMS_STATS.gather_table_stats(‘SCOTT’, ‘EMPLOYEES’, estimate_percent => 15);
+
+–收集index信息
+EXEC DBMS_STATS.gather_index_stats(‘SCOTT’, ‘EMPLOYEES_PK’);
+EXEC DBMS_STATS.gather_index_stats(‘SCOTT’, ‘EMPLOYEES_PK’, estimate_percent => 15);
+
+–删除收集信息
+EXEC DBMS_STATS.delete_database_stats;
+EXEC DBMS_STATS.delete_schema_stats(‘SCOTT’);
+EXEC DBMS_STATS.delete_table_stats(‘SCOTT’, ‘EMPLOYEES’);
+EXEC DBMS_STATS.delete_index_stats(‘SCOTT’, ‘EMPLOYEES_PK’);
+
+–创建备份收集信息表
+begin
+dbms_stats.create_stat_table(USER,stattab => ‘STAT_TABLE’);
+end;
+
+–备份收集信息
+BEGIN
+dbms_stats.export_table_stats(USER,tabname => ‘FEI_T’,stattab => ‘STAT_TABLE’);
+END;
+
+–删除收集信息
+BEGIN
+DBMS_STATS.delete_table_stats(USER,tabname => ‘FEI_T’);
+END;
+
+–导入收集信息
+BEGIN
+dbms_stats.IMPORT_TABLE_STATS(USER,’FEI_T’,stattab => ‘STAT_TABLE’);
+END;
+
+–说明：
+当前用户可以使用user代替用户名
+分析表相关对象信息cascade => true
+
+
+
+
+
+
+1.创建统计信息备份表
+创建存储统计信息表:
+exec dbms_stats.create_stat_table('FINODSDATA','STATS_TABLE');
+
+2.导出统计信息
+exec dbms_stats.export_schema_stats(ownname=>'FINODSDATA',stattab=>'STATS_TABLE',statid=>'FINODSDATA_20190307');
+
+SQL> select count(*) from FINODSDATA.STATS_TABLE;
+
+
+3.查看临时表数据行
+SQL> select count(*) from TMP_GL_JE_LINES;
+
+  COUNT(*)
+----------
+         0
+
+
+set linesize 500
+set pagesize 500
+col owner for a20
+col table_name for a25
+select owner,table_name,num_rows,last_analyzed from dba_tables where table_name in ('TMP_FA_BOOKS','TMP_FA_ADDITIONS','TMP_FA_RESERVE_LEDGER');
+
+OWNER                TABLE_NAME                  NUM_ROWS LAST_ANALYZED
+-------------------- ------------------------- ---------- ---------------
+FINODSDATA           TMP_GL_JE_LINES                    0 02-MAR-19
+
+
+4.手工指定统计信息
+select table_name,num_rows,blocks,avg_row_len from dba_tables where table_name in ('TMP_FA_BOOKS','TMP_FA_ADDITIONS','TMP_FA_RESERVE_LEDGER');
+
+select table_name,num_rows,blocks,avg_row_len from user_tables where table_name = 'TMP_GL_JE_HEADERS';
+select table_name,num_rows,blocks,avg_row_len from user_tables where table_name = 'TMP_GL_BALANCES';
+
+
+TABLE_NAME                                                                                   NUM_ROWS     BLOCKS AVG_ROW_LEN
+------------------------------------------------------------------------------------------ ---------- ---------- -----------
+TMP_GL_BALANCES                                                                                672626      14177          89
+
+
+numblks: select round(blocks*500000/num_rows) from dual;
+NUMBLKS:  select round(500000/(num_rows/blocks)) from dual;
+
+select round(500000/(672626/14177)) from dual;
+select round(14177*500000/672626) from dual;
+
+
+
+BEGIN
+  DBMS_STATS.SET_TABLE_STATS(OWNNAME => 'FINODSDATA',
+                             TABNAME  => 'TMP_GL_JE_LINES',
+                             NUMROWS  => 0,
+                             NUMBLKS  => 0,
+                             AVGRLEN  => 89);
+END;
+
+
+5.锁定统计信息
+begin
+
+  dbms_stats.lock_table_stats('FINODSDATA', 'TMP_AP_INVOICE_PAYMENTS');
+
+end;
+
+/
+
+select s.STATTYPE_LOCKED from user_TAB_STATISTICS s  where s.table_name='TMP_GL_JE_LINES';
+select s.STATTYPE_LOCKED from user_TAB_STATISTICS s  where s.table_name='TMP_GL_JE_LINES';
+
+
+select s.table_name,s.STATTYPE_LOCKED  from user_TAB_STATISTICS s  where s.STATTYPE_LOCKED='ALL';
+select s.table_name,s.STATTYPE_LOCKED  from DBA_TAB_STATISTICS s  where s.STATTYPE_LOCKED='ALL';
+
+select /*+ dynamic_sampling(TMP_GL_JE_LINES 1) */ * from test;
+
+使用动态采样:
+
+tmp_gl_balances
+
+
+TMP_GL_BALANCES
+
+
+
+BEGIN
+
+DBMS_STATS.DELETE_TABLE_STATS('FINODSDATA','TMP_GL_BALANCES');
+
+DBMS_STATS.LOCK_TABLE_STATS('FINODSDATA','TMP_GL_BALANCES');
+
+END;
+
+/
+
+统计信息加锁/解锁
+
+--锁住表的统计信息
+exec dbms_stats.lock_table_stats('SCOTT','T1');
+--解锁表的统计信息
+exec dbms_stats.unlock_table_stats('SCOTT','T1');
+
+
+
+
+SQL> begin
+
+dbms_stats.gather_table_stats(ownname => 'FINODSDATA',
+
+tabname => 'TMP_GL_BALANCES' ,
+
+estimate_percent => 100 ,
+
+method_opt => 'for all columns size repeat' ,
+
+no_invalidate => FALSE,
+
+degree => 8,
+
+cascade => TRUE);
+
+end;
+
+/
+
+
+
+三、导入统计信息
+exec dbms_stats.import_schema_stats(ownname=>'FINODSDATA',stattab=>'STATS_TABLE',statid=>'FINODSDATA_20190307');
+
+
+
+in ()
+
+select count(1) from TMP_FA_RESERVE_LEDGER
+--46050
+
+select count(1) from TMP_FA_BOOKS
+--118985
+
+select count(1) from TMP_FA_ADDITIONS
+
+
+
+
+
+手工锁定统计信息:
+set linesize 500
+set pagesize 500
+col owner for a20
+col table_name for a25
+select owner,table_name,num_rows,last_analyzed from dba_tables where table_name='TMP_GL_BALANCES';
+
+OWNER                TABLE_NAME                  NUM_ROWS LAST_ANALYZED
+-------------------- ------------------------- ---------- ---------------
+FINODSDATA           TMP_GL_BALANCES               672626 13-MAR-19
+
+
+select owner,table_name,num_rows,last_analyzed from dba_tables where table_name='TMP_GL_JE_LINES';
+
+
+
+
+SQL> select table_name,num_rows,blocks,avg_row_len from dba_tables where table_name = 'TMP_GL_JE_LINES';
+
+TABLE_NAME                  NUM_ROWS     BLOCKS AVG_ROW_LEN
+------------------------- ---------- ---------- -----------
+TMP_GL_BALANCES               672626      14177          89
+
+select owner,table_name,num_rows,last_analyzed from dba_tables where table_name='GL_BALANCES';
+select owner,table_name,num_rows,last_analyzed from dba_tables where table_name='GL_JE_LINES';
+
+
+
+查看是否被锁定:
+select table_name,stattype_locked from dba_tab_statistics where stattype_locked is not null;
+
+
+
+一、创建存储统计信息表
+exec dbms_stats.create_stat_table('SPA','STATS_TABLE','SUPPORT');
+exec dbms_stats.create_stat_table('SPA','STATS_TABLE2','SUPPORT');
+---SUPPORT：表空间名
+exec dbms_stats.create_stat_table (ownname => 'EDRDATA', stattab => 'STATS_TABLE2', tblspace => 'SUPPORT');
+
+
+
+二、导出统计信息
+exec dbms_stats.export_schema_stats(ownname=>'EDRDATA',statown=>'SPA',stattab=>'STATS_TABLE2',statid=>'EDRDATA_20230917');
+
+SQL> select count(*) from SPA.STATS_TABLE2;
+
+导出表的统计信息
+exec dbms_stats.create_stat_table('SPA','STATS_TABLE_CNTR','SUPPORT');
+exec dbms_stats.export_table_stats(ownname=>'EDRDATA',statown=>'SPA',tabname=>'TMPT_CNTR_AUDIT_LOG',stattab=>'STATS_TABLE_CNTR',statid => 'EDRDATA_CNTR_0917');
+
+alter session set container=edruat;
+grant execute on dbms_java to spa;
+
+export  NLS_LANG=AMERICAN_AMERICA.UTF8
+exp spa/spa@edruat tables=STATS_TABLE_CNTR file=/home/oracle/STATS_TABLE_CNTR.dmp
+exp spa/spa@edrprod tables=STATS_TABLE2 file=/home/oracle/STATS_TABLE2.dmp 
+
+export  NLS_LANG=AMERICAN_AMERICA.UTF8
+imp spa/spa@edrprod tables=STATS_TABLE_CNTR file=/home/oracle/STATS_TABLE_CNTR.dmp 
+
+
+/home/dba/oracle
+三、导入统计信息
+exec dbms_stats.IMPORT_TABLE_STATS(ownname=>'EDRDATA',statown=>'SPA',tabname=>'TMPT_CNTR_AUDIT_LOG',stattab=>'STATS_TABLE_CNTR',statid=>'EDRDATA_CNTR_0917');
+
+exec dbms_stats.IMPORT_schema_STATS(ownname=>'EDRDATA',statown=>'SPA',stattab=>'STATS_TABLE2',statid=>'EDRDATA_20230917');
+四、删除统计信息
+exec dbms_stats.drop_stat_table('EDRDATA','STATS_TABLE');
+
+
+删除统计信息，锁定统计信息:
+exec dbms_stats.delete_table_stats(ownname => 'SA',tabname => upper('temp_T_ORG_Admin'),cascade_indexes => true) ;
+
+
+exec dbms_stats.lock_table_stats(ownname => 'EDRDATA',tabname => upper('TMPT_CNTR_HOLD_RELEASE'),stattype => 'ALL');
+
+
+execute dbms_stats.gather_table_stats(ownname => 'EDRDATA', tabname =>'TMPT_CNTR_AUDIT_LOG', estimate_percent =>DBMS_STATS.AUTO_SAMPLE_SIZE, method_opt => 'FOR ALL COLUMNS SIZE AUTO', cascade => TRUE);
+EXECUTE DBMS_STATS.UNlock_table_stats(OWNNAME=> 'EDRDATA',TABNAME=> 'TMPT_CVI_CNTR_EXTINCTION_LOG');
+
+EXECUTE DBMS_STATS.lock_table_stats(OWNNAME=> 'EDRDATA',TABNAME=> 'TMPT_CNTR_HOLD_RELEASE');
+EXECUTE DBMS_STATS.lock_table_stats(OWNNAME=> 'EDRDATA',TABNAME=> 'TMPT_CVI_CNTR_EXTINCTION_LOG');
+        DECLARE
+          CURSOR STALE_TABLE IS
+          SELECT table_name 
+         FROM DBA_tables
+             WHERE OWNER = 'EDRDATA'
+               AND table_name like 'TMPT%';
+        BEGIN
+              FOR STALE IN STALE_TABLE LOOP
+              DBMS_STATS.lock_table_stats(OWNNAME          => 'EDRDATA',
+                                  TABNAME          => STALE.table_name);
+              END LOOP;
+        END;
+        /
+
+		
+        DECLARE
+          CURSOR STALE_TABLE IS
+          SELECT table_name 
+         FROM DBA_tables
+             WHERE OWNER = 'EDRDATA'
+               AND table_name like 'TMPT%';
+        BEGIN
+              FOR STALE IN STALE_TABLE LOOP
+              DBMS_STATS.UNLOCK_TABLE_STATS(OWNNAME          => 'EDRDATA',
+                                  TABNAME          => STALE.table_name);
+              END LOOP;
+        END;
+
+        /
+
+统计信息备份
+dbms_stats.restore_table_stats
+select DBMS_STATS.GET_STATS_HISTORY_AVAILABILITY from dual;
+18-AUG-23 11.47.54.128092000 AM +08:00
+select * from sys.WRI$_OPTSTAT_TAB_HISTORY where OBJ#=122671
+取saveing time的
+SQL> select to_timestamp ('2023/9/6 13:01:12','yyyy-mm-dd hh24:mi:ss') from dual;
+06-SEP-23 12.01.12.000000000 PM
+ 
+BEGIN
+DBMS_STATS.RESTORE_TABLE_STATS(
+ownname => 'EDRDATA',
+tabname => 'TMPT_CVI_CNTR_EXTINCTION_LOG',
+as_of_timestamp => '06-SEP-23 2.01.12.000000000 PM'
+);
+END;
+/
+ 
+ 
+ 

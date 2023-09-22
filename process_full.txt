@@ -1,0 +1,12 @@
+1. 请执行 SQL> alter system set "_report_capture_cycle_time"=0; 关闭SQL_ID=0za9fv0j1vgkk，减少Pnnn 进程的产生。 
+
+The new feature can be disabled to reduce the CPU consumption: 
+
+SQL> alter system set "_report_capture_cycle_time"=0; /* Default is 60 seconds */ 
+
+There is no negative impact in setting the above parameter as it disables only the automatic report capturing feature introduced in 12c. 
+It does not disable the original SQL monitoring framework. SQL monitoring can be used very well without any issues. 
+
+2. 通过parallel_max_servers来限定 Pnnn 进程的数量。取代目前的自动调整的值：261 
+
+ALTER SYSTEM SET parallel_max_servers=100 SCOPE=BOTH SID='*';
